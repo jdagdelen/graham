@@ -9,6 +9,8 @@
 #define max(x, y) ((x) >= (y)) ? (x) : (y)
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
 
+int MAXDEGREE = 4;
+
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
     long int i;
@@ -26,7 +28,7 @@ void get_open_sites(igraph_t *seed, igraph_vector_t *open) {
     igraph_vector_init(&degrees, igraph_vcount(seed));
     igraph_degree(seed, &degrees, igraph_vss_all(), IGRAPH_ALL, 0);
     for (int i = 0; i < igraph_vcount(seed); i++) {
-        if (VECTOR(degrees)[i] < 6)
+        if (VECTOR(degrees)[i] < MAXDEGREE)
             igraph_vector_push_back(open, i);
     }
     igraph_vector_destroy(&degrees);
@@ -58,7 +60,7 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
     int n = igraph_vector_size(&open_sites);
     int new_graphs = 0;
     if (n > 0) {
-        int m = min(n, 6);
+        int m = min(n, MAXDEGREE);
         for (int i = 1; i <= m; i++) {
             c = gsl_combination_calloc(n, i);
             do {
