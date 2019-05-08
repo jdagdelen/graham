@@ -5,6 +5,7 @@
 #include <igraph/igraph.h>
 #include <gsl/gsl_combination.h>
 #include <stdio.h>
+#include <time.h>
 
 #define max(x, y) ((x) >= (y)) ? (x) : (y)
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
@@ -129,16 +130,23 @@ int main(void) {
     igraph_vector_ptr_clear(&unique);
     igraph_vector_ptr_push_back(&clusters, &graph);
     igraph_vector_ptr_push_back(&unique, &graph);
+    clock_t t;
     for (int N = 3; N < 10; N++) {
         igraph_vector_ptr_clear(&candidates);
+        t = clock();
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
         }
         igraph_vector_ptr_clear(&unique);
+        t = clock() - t;
+        printf("N = %i, %li graphs generated in  %f seconds)\n", N,
+                igraph_vector_ptr_size(&candidates), ((double)t)/CLOCKS_PER_SEC); 
         filter_unique(&clusters, &candidates, &unique);
+
         printf("N <= %i, %li graphs (%li new additions out of %li possibilities)\n", N,
                 igraph_vector_ptr_size(&clusters), igraph_vector_ptr_size(&unique),
                igraph_vector_ptr_size(&candidates));
+
     }
 
     igraph_vector_ptr_destroy(&candidates);
