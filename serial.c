@@ -136,10 +136,8 @@ int main(void) {
     clock_t tt, gt, ft;
     long num_unique_found, total_number, num_generated_in_step;
 
-    tt = clock();
-
     printf("%10s %10s %10s %10s %10s %10s %10s\n", "N", "candidates", "gen_time", "unique", "filter_time", "total_found", "total_time");
-
+    tt = clock();
     for (int N = 3; N < 10; N++) {
         igraph_vector_ptr_clear(&candidates);
         gt = clock();
