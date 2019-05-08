@@ -1,0 +1,34 @@
+#                             -*- compilation -*-
+3. types.at:29: testing Vector (more) (vector_t):  ...
+./types.at:31: $CC ${abs_top_srcdir}/examples/simple/vector2.c -I${abs_top_srcdir}/include -I${abs_top_builddir}/include -L${abs_top_builddir}/src/.libs -ligraph -lm  -o itest
+./types.at:31: cat ${abs_top_srcdir}/examples/'simple/vector2.out' | sed "s/@VERSION@/$(cat ${abs_top_srcdir}/VERSION)/g" > expout
+./types.at:31: 
+./types.at:31: DYLD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${DYLD_LIBRARY_PATH+:$DYLD_LIBRARY_PATH} LD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH} ./itest
+--- /dev/null	2019-04-28 21:48:18.000000000 -0700
++++ /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/3/stderr	2019-04-28 21:48:18.000000000 -0700
+@@ -0,0 +1,4 @@
++dyld: Library not loaded: @rpath/libicui18n.58.dylib
++  Referenced from: /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/src/.libs/libigraph.0.dylib
++  Reason: image not found
++/Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/3/test-source: line 64: 55951 Abort trap: 6           DYLD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${DYLD_LIBRARY_PATH+:$DYLD_LIBRARY_PATH} LD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH} ./itest
+--- expout	2019-04-28 21:48:18.000000000 -0700
++++ /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/3/stdout	2019-04-28 21:48:18.000000000 -0700
+@@ -1,16 +0,0 @@
+- 0 1 2 3 4 5 6 7 8 9
+- 1 2 3 4 5 6 7 8 9 10
+- 9 1 2 6 4 5 3 7 8 0
+- 10 9 8 7 6 5 4 3 2 1
+- 1 2 3 4 5 6 7 8 9 10
+- 6 6 6 6 6 6 6 6 6 6
+- 4 4 4 4 4 4 4 4 4 4
+- 2 2 2 2 2 2 2 2 2 2
+- 4 4 4 4 4 4 4 4 4 4
+-4 4 0 0
+-1 10 0 9
+-1 10 9 0
+- 3 6 6 9
+- 5 7 8 8 10
+- 1 12 15 17 20
+-
+./types.at:31: exit code was 134, expected 0
+3. types.at:29: 3. Vector (more) (vector_t):  (types.at:29): FAILED (types.at:31)

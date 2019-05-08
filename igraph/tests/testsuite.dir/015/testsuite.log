@@ -1,0 +1,56 @@
+#                             -*- compilation -*-
+15. types.at:89: testing Trie (igraph_trie_t):  ...
+./types.at:92: $CC ${abs_top_srcdir}/examples/simple/igraph_trie.c -I${abs_top_srcdir}/include -I${abs_top_srcdir}/src -I${abs_top_builddir}/include -I${abs_top_builddir} -L${abs_top_builddir}/src/.libs -ligraph -lm  -o itest
+./types.at:92: cat ${abs_top_srcdir}/examples/'simple/igraph_trie.out' | sed "s/@VERSION@/$(cat ${abs_top_srcdir}/VERSION)/g" > expout
+./types.at:92: 
+./types.at:92: DYLD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${DYLD_LIBRARY_PATH+:$DYLD_LIBRARY_PATH} LD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH} ./itest
+--- /dev/null	2019-04-28 21:48:21.000000000 -0700
++++ /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/15/stderr	2019-04-28 21:48:21.000000000 -0700
+@@ -0,0 +1,4 @@
++dyld: Library not loaded: @rpath/libicui18n.58.dylib
++  Referenced from: /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/src/.libs/libigraph.0.dylib
++  Reason: image not found
++/Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/15/test-source: line 64: 56176 Abort trap: 6           DYLD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${DYLD_LIBRARY_PATH+:$DYLD_LIBRARY_PATH} LD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH} ./itest
+--- expout	2019-04-28 21:48:21.000000000 -0700
++++ /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/15/stdout	2019-04-28 21:48:21.000000000 -0700
+@@ -1,38 +0,0 @@
+-hello: 0
+-hepp:  1
+-alma:  2
+-also:  3
+-hello: 0
+-hepp:  1
+-alma:  2
+-also:  3
+-a:     4
+-axon:  5
+-hello: 0
+-hepp:  1
+-alma:  2
+-also:  3
+-head:  -1
+-alma:  2
+-hello: 0
+-hepp:  1
+-alma:  2
+-also:  3
+-hello: 0
+-hepp:  1
+-alma:  2
+-also:  3
+-a:     4
+-axon:  5
+-hello: 0
+-hepp:  1
+-alma:  2
+-also:  3
+-head:  -1
+-alma:  2
+-0: hello
+-1: hepp
+-2: alma
+-3: also
+-4: a
+-5: axon
+./types.at:92: exit code was 134, expected 0
+15. types.at:89: 15. Trie (igraph_trie_t):  (types.at:89): FAILED (types.at:92)

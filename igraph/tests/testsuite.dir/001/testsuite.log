@@ -1,0 +1,15 @@
+#                             -*- compilation -*-
+1. version.at:26: testing Simple version query (igraph_version):  ...
+./version.at:28: $CC ${abs_top_srcdir}/examples/simple/igraph_version.c -I${abs_top_srcdir}/include -I${abs_top_builddir}/include -L${abs_top_builddir}/src/.libs -ligraph -lm  -o itest
+./version.at:28: >expout
+./version.at:28: 
+./version.at:28: DYLD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${DYLD_LIBRARY_PATH+:$DYLD_LIBRARY_PATH} LD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH} ./itest
+--- /dev/null	2019-04-28 21:48:17.000000000 -0700
++++ /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/1/stderr	2019-04-28 21:48:18.000000000 -0700
+@@ -0,0 +1,4 @@
++dyld: Library not loaded: @rpath/libicui18n.58.dylib
++  Referenced from: /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/src/.libs/libigraph.0.dylib
++  Reason: image not found
++/Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/1/test-source: line 64: 55908 Abort trap: 6           DYLD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${DYLD_LIBRARY_PATH+:$DYLD_LIBRARY_PATH} LD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH} ./itest
+./version.at:28: exit code was 134, expected 0
+1. version.at:26: 1. Simple version query (igraph_version):  (version.at:26): FAILED (version.at:28)

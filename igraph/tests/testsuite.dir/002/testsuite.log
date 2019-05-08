@@ -1,0 +1,44 @@
+#                             -*- compilation -*-
+2. types.at:24: testing Vector (vector_t):  ...
+./types.at:26: $CC ${abs_top_srcdir}/examples/simple/vector.c -I${abs_top_srcdir}/include -I${abs_top_builddir}/include -L${abs_top_builddir}/src/.libs -ligraph -lm  -o itest
+./types.at:26: cat ${abs_top_srcdir}/examples/'simple/vector.out' | sed "s/@VERSION@/$(cat ${abs_top_srcdir}/VERSION)/g" > expout
+./types.at:26: 
+./types.at:26: DYLD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${DYLD_LIBRARY_PATH+:$DYLD_LIBRARY_PATH} LD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH} ./itest
+--- /dev/null	2019-04-28 21:48:18.000000000 -0700
++++ /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/2/stderr	2019-04-28 21:48:18.000000000 -0700
+@@ -0,0 +1,4 @@
++dyld: Library not loaded: @rpath/libicui18n.58.dylib
++  Referenced from: /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/src/.libs/libigraph.0.dylib
++  Reason: image not found
++/Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/2/test-source: line 64: 55930 Abort trap: 6           DYLD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${DYLD_LIBRARY_PATH+:$DYLD_LIBRARY_PATH} LD_LIBRARY_PATH=${abs_top_builddir}/src/.libs${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH} ./itest
+--- expout	2019-04-28 21:48:18.000000000 -0700
++++ /Users/jdagdelen/Dropbox/MP/clusters/graham/igraph/tests/testsuite.dir/at-groups/2/stdout	2019-04-28 21:48:18.000000000 -0700
+@@ -1,26 +0,0 @@
+- 0 0 0 0 0 0 0 0 0 0
+- 10 9 8 7 6 5 4 3 2 1
+- 0 100 200 300 400
+- 0 20 40 60 80
+- 0 0 0 0 0 0 0 0 0 0
+- 10 10 9 9 8 8 7 7 6 6 5 5 4 4 3 3 2 2 1 1
+- 0 1 2 3 4 5 6 7 8 9
+- 1 2 3 4 5 6 7 8 9 10
+- 100 99 98 97 96 95 94 93 92 91
+- 100
+- 100 99 98 97 96 95 94 93 92 91
+- 11 12 13 14 15 16 17 18 19 20
+- 15 120
+- 8 10
+- 38
+- 1 2 3 4 5 6 7 8 9 10
+- 1 2 3 4 5 6 7 8 9 10
+- 1 2 3 4 5 6 7 8 9 10
+- 1 2 3 4 5 6 7 8 9 10
+- 0 8 1 7 6 2 3 5 4
+- 4 4 5 6 7 8
+- 1 2 3 4 4 4 4 5 6 7 8
+- 0 1 2 3 4 4 4 4 5 6 7 8
+- 0 1 2 6 5 2 1 0
+- 1 3 5 7 6 4 2 0
+- 0 1 2 3
+./types.at:26: exit code was 134, expected 0
+2. types.at:24: 2. Vector (vector_t):  (types.at:24): FAILED (types.at:26)
