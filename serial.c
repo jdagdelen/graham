@@ -10,7 +10,7 @@
 #define max(x, y) ((x) >= (y)) ? (x) : (y)
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
 
-int MAXDEGREE = 4;
+int MAXDEGREE = 6;
 
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
@@ -114,6 +114,8 @@ void filter_unique(igraph_vector_ptr_t *clusters,
     }
 }
 
+
+
 int main(void) {
     igraph_t graph;
     igraph_small(&graph, 0, IGRAPH_UNDIRECTED, 0, 1, -1);
@@ -130,23 +132,42 @@ int main(void) {
     igraph_vector_ptr_clear(&unique);
     igraph_vector_ptr_push_back(&clusters, &graph);
     igraph_vector_ptr_push_back(&unique, &graph);
-    clock_t t;
+    double total_time, generation_time, filter_time;
+    clock_t tt, gt, ft;
+    long num_unique_found, total_number, num_generated_in_step;
+
+    tt = clock();
+
+    printf("%10s %10s %10s %10s %10s %10s %10s\n", "N", "candidates", "gen_time", "unique", "filter_time", "total_found", "total_time");
+
     for (int N = 3; N < 10; N++) {
         igraph_vector_ptr_clear(&candidates);
-        t = clock();
+        gt = clock();
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
+
         }
+        num_generated_in_step = igraph_vector_ptr_size(&candidates);
         igraph_vector_ptr_clear(&unique);
-        t = clock() - t;
-        printf("N = %i, %li graphs generated in  %f seconds)\n", N,
-                igraph_vector_ptr_size(&candidates), ((double)t)/CLOCKS_PER_SEC); 
+        generation_time = ((double)gt)/CLOCKS_PER_SEC;
+
+        ft = clock();
         filter_unique(&clusters, &candidates, &unique);
+        num_unique_found = igraph_vector_ptr_size(&unique);
+        filter_time = ((double)ft)/CLOCKS_PER_SEC;
 
-        printf("N <= %i, %li graphs (%li new additions out of %li possibilities)\n", N,
-                igraph_vector_ptr_size(&clusters), igraph_vector_ptr_size(&unique),
-               igraph_vector_ptr_size(&candidates));
+        tt=clock();
+        total_number = igraph_vector_ptr_size(&clusters);
+        total_time += ((double)tt)/CLOCKS_PER_SEC;
 
+        printf("%10i %10li %10f %10li %10f %10li %10f\n",
+               N,
+               num_generated_in_step,
+               generation_time,
+               num_unique_found,
+               filter_time,
+               total_number,
+               total_time);
     }
 
     igraph_vector_ptr_destroy(&candidates);
