@@ -50,6 +50,51 @@ void print_vertices(igraph_t *graph) {
     igraph_vs_destroy(&vs);
 }
 
+/* Returns true if two graphs are isomorphic, otherwise returns false */
+igraph_bool_t isomorphic(igraph_t* g1, igraph_t* g2){
+    igraph_bool_t iso;
+    igraph_isomorphic_bliss(g1, g2, &iso, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
+    return iso;
+}
+
+/* Removes all duplicate graphs (isomorphic) from a vector of graphs*/
+void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
+    igraph_vector_ptr_t unique;
+    igraph_vector_ptr_init(&unique, 100);
+    igraph_vector_ptr_clear(&unique);
+    for (int i = 0; i < igraph_vector_ptr_size(graphs); i++) {
+        igraph_t *g1 = VECTOR(*graphs)[i];
+        // handle graphs that have already been found
+        if (g1 == NULL) {
+            continue;
+        }
+        // handle all possible pairs of graphs
+        if (i < igraph_vector_ptr_size(graphs) - 1) {
+            for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
+                igraph_t *g2 = VECTOR(*graphs)[j];
+                if (!(g1 == NULL || g2 == NULL)) {
+                    if (isomorphic(g1, g2)) {
+                        igraph_destroy(VECTOR(*graphs)[j]);
+                        VECTOR(*graphs)[j] = NULL;
+                    }
+                }
+            }
+        }
+        // finally, keep the last graph
+        igraph_vector_ptr_push_back(&unique, g1);
+    }
+    igraph_vector_ptr_clear(graphs);
+    igraph_vector_ptr_copy(graphs, &unique);
+    igraph_vector_ptr_destroy(&unique);
+}
+
+void igraph_vector_ptr_combine(igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2){
+    for (int i = 0; i < igraph_vector_ptr_size(v2); i++){
+        igraph_vector_ptr_push_back(v1, VECTOR(*v2)[i]);
+    }
+    igraph_vector_ptr_clear(v2);
+}
+
 void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
     // gets all combinations of up to 6 open vertices to connect new vertex to
     // and creates a new graph for each case.
@@ -137,7 +182,6 @@ int write_graph(const igraph_t *graph, FILE *outstream) {
         }
         IGRAPH_EIT_NEXT(it);
     }
-
     igraph_eit_destroy(&it);
     IGRAPH_FINALLY_CLEAN(1);
     return 0;
@@ -148,6 +192,7 @@ void write_to_file(igraph_vector_ptr_t *graphs) {
     for (int i = 0; i < igraph_vector_ptr_size(graphs); i++) {
         FILE *file = fopen("nonisomorphic.txt", "a");
         write_graph(VECTOR(*graphs)[i], file);
+        igraph_destroy(VECTOR(*graphs)[i]);
         fclose(file);
     }
 }
@@ -186,18 +231,19 @@ int main(void) {
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
         }
-        num_generated_in_step = igraph_vector_ptr_size(&candidates);
-        igraph_vector_ptr_clear(&unique);
+
         generation_time = (double)(clock() - gt)/CLOCKS_PER_SEC;
+        num_generated_in_step = igraph_vector_ptr_size(&candidates);
+
+        wt=clock();
+        write_to_file(&unique);
+        write_time = (double)(clock() - wt)/CLOCKS_PER_SEC;
+        igraph_vector_ptr_clear(&unique);
 
         ft = clock();
         filter_unique(&clusters, &candidates, &unique);
         num_unique_found = igraph_vector_ptr_size(&unique);
         filter_time = (double)(clock() - ft)/CLOCKS_PER_SEC;
-
-        wt=clock();
-        write_to_file(&unique);
-        write_time = (double)(clock() - wt)/CLOCKS_PER_SEC;
 
         total_number += igraph_vector_ptr_size(&unique);
         total_time += (double)(clock() - tt)/CLOCKS_PER_SEC;
