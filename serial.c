@@ -10,7 +10,7 @@
 #define max(x, y) ((x) >= (y)) ? (x) : (y)
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
 
-int MAXDEGREE = 6;
+int MAXDEGREE = 4;
 
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
