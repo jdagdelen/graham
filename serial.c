@@ -68,9 +68,10 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
                 int combo_length = gsl_combination_k(c);
                 igraph_vector_t edge_list;
                 igraph_vector_init(&edge_list, combo_length * 2);
+                igraph_vector_clear(&edge_list);
                 for (int j = 0; j < combo_length * 2; j += 2) {
-                    VECTOR(edge_list)[j] = (igraph_real_t) gsl_combination_data(c)[j / 2];
-                    VECTOR(edge_list)[j] = n;
+                    igraph_vector_push_back(&edge_list, (igraph_real_t) gsl_combination_get(c, j / 2));
+                    igraph_vector_push_back(&edge_list, (igraph_real_t) n);
                 }
                 //            igraph_vector_print(&edge_list);
                 candidate = igraph_Calloc(1, igraph_t);
@@ -109,8 +110,45 @@ void filter_unique(igraph_vector_ptr_t *clusters,
                 }
             }
         }
-        igraph_vector_ptr_push_back(clusters, g1);
         igraph_vector_ptr_push_back(unique, g1);
+    }
+}
+
+
+int write_graph(const igraph_t *graph, FILE *outstream) {
+
+    igraph_eit_t it;
+
+    IGRAPH_CHECK(igraph_eit_create(graph, igraph_ess_all(IGRAPH_EDGEORDER_FROM),
+                                   &it));
+    IGRAPH_FINALLY(igraph_eit_destroy, &it);
+
+    fprintf(outstream, "\n");
+
+    while (!IGRAPH_EIT_END(it)) {
+        igraph_integer_t from, to;
+        int ret;
+        igraph_edge(graph, IGRAPH_EIT_GET(it), &from, &to);
+        ret=fprintf(outstream, "%li %li ",
+                    (long int) from,
+                    (long int) to);
+        if (ret < 0) {
+            IGRAPH_ERROR("Write error", IGRAPH_EFILE);
+        }
+        IGRAPH_EIT_NEXT(it);
+    }
+
+    igraph_eit_destroy(&it);
+    IGRAPH_FINALLY_CLEAN(1);
+    return 0;
+}
+
+void write_to_file(igraph_vector_ptr_t *graphs) {
+
+    for (int i = 0; i < igraph_vector_ptr_size(graphs); i++) {
+        FILE *file = fopen("nonisomorphic.txt", "a");
+        write_graph(VECTOR(*graphs)[i], file);
+        fclose(file);
     }
 }
 
@@ -132,39 +170,46 @@ int main(void) {
     igraph_vector_ptr_clear(&unique);
     igraph_vector_ptr_push_back(&clusters, &graph);
     igraph_vector_ptr_push_back(&unique, &graph);
-    double total_time, generation_time, filter_time;
-    clock_t tt, gt, ft;
+    double total_time, generation_time, filter_time, write_time;
+    clock_t tt, gt, ft, wt;
     long num_unique_found, total_number, num_generated_in_step;
 
-    printf("%10s %10s %10s %10s %10s %10s %10s\n", "N", "candidates", "gen_time", "unique", "filter_time", "total_found", "total_time");
+    printf("%10s %10s %10s %10s %10s %10s %10s %10s\n",
+            "N", "candidates", "gen_time", "unique", "filter_time", "total_found", "write_time", "total_time");
     tt = clock();
+
+    total_number = 1;
+
     for (int N = 3; N < 10; N++) {
         igraph_vector_ptr_clear(&candidates);
         gt = clock();
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
-
         }
         num_generated_in_step = igraph_vector_ptr_size(&candidates);
         igraph_vector_ptr_clear(&unique);
-        generation_time = ((double)gt)/CLOCKS_PER_SEC;
+        generation_time = (double)(clock() - gt)/CLOCKS_PER_SEC;
 
         ft = clock();
         filter_unique(&clusters, &candidates, &unique);
         num_unique_found = igraph_vector_ptr_size(&unique);
-        filter_time = ((double)ft)/CLOCKS_PER_SEC;
+        filter_time = (double)(clock() - ft)/CLOCKS_PER_SEC;
 
-        tt=clock();
-        total_number = igraph_vector_ptr_size(&clusters);
-        total_time += ((double)tt)/CLOCKS_PER_SEC;
+        wt=clock();
+        write_to_file(&unique);
+        write_time = (double)(clock() - wt)/CLOCKS_PER_SEC;
 
-        printf("%10i %10li %10f %10li %10f %10li %10f\n",
+        total_number += igraph_vector_ptr_size(&unique);
+        total_time += (double)(clock() - tt)/CLOCKS_PER_SEC;
+
+        printf("%10i %10li %10.4f %10li %10.4f %10li %10.4f %10.4f\n",
                N,
                num_generated_in_step,
                generation_time,
                num_unique_found,
                filter_time,
                total_number,
+               write_time,
                total_time);
     }
 

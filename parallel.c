@@ -94,7 +94,7 @@ void igraph_vector_ptr_combine(igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2)
     igraph_vector_ptr_clear(v2);
 }
 
-void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *unique_candidates) {
+void mutate_seed(igraph_t *seed, int n, igraph_vector_ptr_t *unique_candidates) {
     // gets all combinations of up to 6 open vertices to connect new vertex to
     // and creates a new graph for each case.
     gsl_combination *c;
