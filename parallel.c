@@ -272,7 +272,6 @@ int main(void) {
     for (int N = 3; N <= MAXN; N++) {
         igraph_vector_ptr_clear(&candidates);
         gt = clock();
-#pragma omp parallel for
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
         }
