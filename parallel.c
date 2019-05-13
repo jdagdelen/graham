@@ -213,9 +213,11 @@ void filter_unique(igraph_vector_ptr_t *graphs,
             num_unique++;
         }
         for (int i = 0; i < num_unique; i++) {
-            igraph_vector_ptr_push_back(&unique, VECTOR(*graphs)[unique_indices[i]]);
+            igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[unique_indices[i]]);
         }
     };
+    free(unique_indices);
+    free(removed);
 }
 
 //void filter_unique(igraph_vector_ptr_t *clusters,
