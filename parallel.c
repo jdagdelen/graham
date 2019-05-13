@@ -143,6 +143,7 @@ void igraph_vector_ptr_combine(igraph_vector_ptr_t *v1, igraph_vector_ptr_t *v2)
 void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
     // gets all combinations of up to 6 open vertices to connect new vertex to
     // and creates a new graph for each case.
+    printf("entered m_s\n");
     gsl_combination *c;
     igraph_vector_t open_sites;
     igraph_vector_init(&open_sites, igraph_vcount(seed));
@@ -175,6 +176,7 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
         }
     }
     igraph_vector_destroy(&open_sites);
+    printf("exited m_s\n");
 }
 
 
