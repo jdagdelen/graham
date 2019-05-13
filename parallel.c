@@ -144,7 +144,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
     igraph_vector_bool_t found;
     igraph_vector_bool_init(&found, n_candidates);
     int number_found = 0;
-    #pragma omp parallel shared(g1)
+    #pragma omp parallel
     for (int i = 0; i < n_candidates; i++) {
         // handle graphs that have already been found
         if (!(VECTOR(found)[i]) && i < n_candidates - 1) {
