@@ -1,8 +1,4 @@
 //
-// Created by John Dagdelen on 5/8/19.
-//
-
-//
 // Created by John Dagdelen on 4/28/19.
 //
 
@@ -76,6 +72,7 @@ void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
         }
         // handle all possible pairs of graphs
         if (i < igraph_vector_ptr_size(graphs) - 1) {
+            #pragma omp parallel for
             for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
                 igraph_t *g2 = VECTOR(*graphs)[j];
                 if (!(g1 == NULL || g2 == NULL)) {
@@ -143,7 +140,6 @@ void filter_unique(igraph_vector_ptr_t *clusters,
                    igraph_vector_ptr_t *candidates,
                    igraph_vector_ptr_t *unique
 ) {
-    #pragma omp parallel for
     for (int i = 0; i < igraph_vector_ptr_size(candidates); i++) {
         igraph_t *g1 = VECTOR(*candidates)[i];
         if (g1 == NULL){
@@ -154,15 +150,15 @@ void filter_unique(igraph_vector_ptr_t *clusters,
                 igraph_bool_t are_isomorphic;
                 igraph_t *g2 = VECTOR(*candidates)[j];
                 if (!(g1 == NULL || g2 == NULL)) {
-                    igraph_isomorphic_bliss(g1, g2, &are_isomorphic, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
+                    igraph_isomorphic_bliss(VECTOR(*candidates)[i], VECTOR(*candidates)[j],
+                                            &are_isomorphic, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
                     if (are_isomorphic) {
-                        VECTOR(*candidates)[i] = NULL;
-                        break;
+                        VECTOR(*candidates)[j] = NULL;
                     }
                 }
             }
         }
-        if (VECTOR(*candidates)[i] != NULL) igraph_vector_ptr_push_back(unique, g1);
+        igraph_vector_ptr_push_back(unique, g1);
     }
 }
 
