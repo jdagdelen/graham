@@ -217,6 +217,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
     }
     free(unique_indices);
     free(removed);
+    printf("exited f_u\n");
 }
 
 //void filter_unique(igraph_vector_ptr_t *clusters,
