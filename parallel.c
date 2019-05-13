@@ -72,7 +72,6 @@ void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
         }
         // handle all possible pairs of graphs
         if (i < igraph_vector_ptr_size(graphs) - 1) {
-            #pragma omp parallel for
             for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
                 igraph_t *g2 = VECTOR(*graphs)[j];
                 if (!(g1 == NULL || g2 == NULL)) {
@@ -231,6 +230,7 @@ int main(void) {
     for (int N = 3; N <= MAXN; N++) {
         igraph_vector_ptr_clear(&candidates);
         gt = clock();
+        #pragma omp parallel for
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
         }
