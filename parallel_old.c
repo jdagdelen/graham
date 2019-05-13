@@ -1,20 +1,15 @@
 //
-// Created by John Dagdelen on 5/8/19.
-//
-
-//
 // Created by John Dagdelen on 4/28/19.
 //
 
 #include <igraph/igraph.h>
 #include <gsl/gsl_combination.h>
 #include <stdio.h>
-#include <time.h>
 
 #define max(x, y) ((x) >= (y)) ? (x) : (y)
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
 
-int MAXDEGREE = 4;
+int MAXDEGREE = 6;
 
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
@@ -94,17 +89,22 @@ void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
 
 void igraph_vector_ptr_combine(igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2){
     for (int i = 0; i < igraph_vector_ptr_size(v2); i++){
-        igraph_vector_ptr_push_back(v1, VECTOR(*v2)[i]);
+        igraph_vector_ptr_push_back(VECTOR(*v2)[i]);
     }
     igraph_vector_ptr_clear(v2);
 }
 
-void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
+void mutate_seed(igraph_t *seed, int n, igraph_vector_ptr_t *unique_candidates) {
     // gets all combinations of up to 6 open vertices to connect new vertex to
     // and creates a new graph for each case.
     gsl_combination *c;
     igraph_vector_t open_sites;
     igraph_vector_init(&open_sites, igraph_vcount(seed));
+
+    igraph_vector_ptr_t candidates;
+    igraph_vector_ptr_t_init(&candidates, 100);
+    igraph_vector_ptr_t_clear(&candidates);
+
     igraph_t *candidate;
     get_open_sites(seed, &open_sites);
     int n = igraph_vector_size(&open_sites);
@@ -117,10 +117,9 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
                 int combo_length = gsl_combination_k(c);
                 igraph_vector_t edge_list;
                 igraph_vector_init(&edge_list, combo_length * 2);
-                igraph_vector_clear(&edge_list);
                 for (int j = 0; j < combo_length * 2; j += 2) {
-                    igraph_vector_push_back(&edge_list, (igraph_real_t) gsl_combination_get(c, j / 2));
-                    igraph_vector_push_back(&edge_list, (igraph_real_t) n);
+                    VECTOR(edge_list)[j] = (igraph_real_t) gsl_combination_data(c)[j / 2];
+                    VECTOR(edge_list)[j] = n;
                 }
                 //            igraph_vector_print(&edge_list);
                 candidate = igraph_Calloc(1, igraph_t);
@@ -131,75 +130,41 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
                 new_graphs++;
             } while (gsl_combination_next(c) == GSL_SUCCESS);
             gsl_combination_free(c);
+            reduce_isomorphic(candidates);
+            igraph_vector_ptr_combine(unique_candidates, &candidates);
         }
     }
     igraph_vector_destroy(&open_sites);
+    igraph_vector_ptr_destroy(&candidates);
 }
 
-
-void filter_unique(igraph_vector_ptr_t *clusters,
-                   igraph_vector_ptr_t *candidates,
-                   igraph_vector_ptr_t *unique
-) {
-    for (int i = 0; i < igraph_vector_ptr_size(candidates); i++) {
-        igraph_t *g1 = VECTOR(*candidates)[i];
-        if (g1 == NULL){
-            continue;
-        }
-        if (i < igraph_vector_ptr_size(candidates) - 1) {
-            for (int j = i + 1; j < igraph_vector_ptr_size(candidates); j++) {
-                igraph_bool_t are_isomorphic;
-                igraph_t *g2 = VECTOR(*candidates)[j];
-                if (!(g1 == NULL || g2 == NULL)) {
-                    igraph_isomorphic_bliss(VECTOR(*candidates)[i], VECTOR(*candidates)[j],
-                                            &are_isomorphic, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
-                    if (are_isomorphic) {
-                        VECTOR(*candidates)[j] = NULL;
-                    }
-                }
-            }
-        }
-        igraph_vector_ptr_push_back(unique, g1);
-    }
-}
-
-
-int write_graph(const igraph_t *graph, FILE *outstream) {
-
-    igraph_eit_t it;
-
-    IGRAPH_CHECK(igraph_eit_create(graph, igraph_ess_all(IGRAPH_EDGEORDER_FROM),
-                                   &it));
-    IGRAPH_FINALLY(igraph_eit_destroy, &it);
-
-    fprintf(outstream, "\n");
-
-    while (!IGRAPH_EIT_END(it)) {
-        igraph_integer_t from, to;
-        int ret;
-        igraph_edge(graph, IGRAPH_EIT_GET(it), &from, &to);
-        ret=fprintf(outstream, "%li %li ",
-                    (long int) from,
-                    (long int) to);
-        if (ret < 0) {
-            IGRAPH_ERROR("Write error", IGRAPH_EFILE);
-        }
-        IGRAPH_EIT_NEXT(it);
-    }
-    igraph_eit_destroy(&it);
-    IGRAPH_FINALLY_CLEAN(1);
-    return 0;
-}
-
-void write_to_file(igraph_vector_ptr_t *graphs) {
-
-    for (int i = 0; i < igraph_vector_ptr_size(graphs); i++) {
-        FILE *file = fopen("nonisomorphic.txt", "a");
-        write_graph(VECTOR(*graphs)[i], file);
-        igraph_destroy(VECTOR(*graphs)[i]);
-        fclose(file);
-    }
-}
+//
+//void filter_unique(igraph_vector_ptr_t *clusters,
+//                   igraph_vector_ptr_t *candidates,
+//                   igraph_vector_ptr_t *unique) {
+//    for (int i = 0; i < igraph_vector_ptr_size(candidates); i++) {
+//        igraph_t *g1 = VECTOR(*candidates)[i];
+//        if (g1 == NULL) {
+//            continue;
+//        }
+//        if (i < igraph_vector_ptr_size(candidates) - 1) {
+//            for (int j = i + 1; j < igraph_vector_ptr_size(candidates); j++) {
+//                igraph_bool_t are_isomorphic;
+//                igraph_t *g2 = VECTOR(*candidates)[j];
+//                if (!(g1 == NULL || g2 == NULL)) {
+//                    igraph_isomorphic_bliss(VECTOR(*candidates)[i], VECTOR(*candidates)[j],
+//                                            &are_isomorphic, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
+//                    if (are_isomorphic) {
+//                        igraph_destroy(VECTOR(*candidates)[j]);
+//                        VECTOR(*candidates)[j] = NULL;
+//                    }
+//                }
+//            }
+//        }
+//        igraph_vector_ptr_push_back(clusters, g1);
+//        igraph_vector_ptr_push_back(unique, g1);
+//    }
+//}
 
 
 
@@ -219,48 +184,16 @@ int main(void) {
     igraph_vector_ptr_clear(&unique);
     igraph_vector_ptr_push_back(&clusters, &graph);
     igraph_vector_ptr_push_back(&unique, &graph);
-    double total_time, generation_time, filter_time, write_time;
-    clock_t tt, gt, ft, wt;
-    long num_unique_found, total_number, num_generated_in_step;
-
-    printf("%10s %10s %10s %10s %10s %10s %10s %10s\n",
-           "N", "candidates", "gen_time", "unique", "filter_time", "total_found", "write_time", "total_time");
-    tt = clock();
-
-    total_number = 1;
-
     for (int N = 3; N < 10; N++) {
         igraph_vector_ptr_clear(&candidates);
-        gt = clock();
-        for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
+        for (int i = 0; i < igraph_vector_ptr_size(&candidates); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
         }
-
-        generation_time = (double)(clock() - gt)/CLOCKS_PER_SEC;
-        num_generated_in_step = igraph_vector_ptr_size(&candidates);
-
-        wt=clock();
-        write_to_file(&unique);
-        write_time = (double)(clock() - wt)/CLOCKS_PER_SEC;
         igraph_vector_ptr_clear(&unique);
-
-        ft = clock();
-        filter_unique(&clusters, &candidates, &unique);
-        num_unique_found = igraph_vector_ptr_size(&unique);
-        filter_time = (double)(clock() - ft)/CLOCKS_PER_SEC;
-
-        total_number += igraph_vector_ptr_size(&unique);
-        total_time += (double)(clock() - tt)/CLOCKS_PER_SEC;
-
-        printf("%10i %10li %10.4f %10li %10.4f %10li %10.4f %10.4f\n",
-               N,
-               num_generated_in_step,
-               generation_time,
-               num_unique_found,
-               filter_time,
-               total_number,
-               write_time,
-               total_time);
+//        filter_unique(&clusters, &candidates, &unique);
+        printf("N <= %i, %li graphs (%li new additions out of %li possibilities)\n", N,
+               igraph_vector_ptr_size(&clusters), igraph_vector_ptr_size(&unique),
+               igraph_vector_ptr_size(&candidates));
     }
 
     igraph_vector_ptr_destroy(&candidates);
