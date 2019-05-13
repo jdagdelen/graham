@@ -21,7 +21,6 @@ void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
     long int i;
     for (i = 0; i < igraph_vector_ptr_size(graphlist); i++) {
         igraph_destroy(VECTOR(*graphlist)[i]);
-        free(VECTOR(*graphlist)[i]);
     }
 }
 
@@ -141,7 +140,6 @@ void filter_unique(igraph_vector_ptr_t *graphs,
                    igraph_vector_ptr_t *unique) {
 
     int n_candidates = igraph_vector_ptr_size(graphs);
-    igraph_vector_ptr_clear(unique);
     int* found = calloc(n_candidates, sizeof(int));
 
     #pragma omp parallel
@@ -256,7 +254,6 @@ int main(void) {
 
     igraph_vector_ptr_clear(&candidates);
     igraph_vector_ptr_clear(&unique);
-    igraph_vector_ptr_push_back(&candidates, &graph);
     igraph_vector_ptr_push_back(&unique, &graph);
     double total_time, generation_time, filter_time, write_time;
     clock_t tt, gt, ft, wt;
@@ -265,7 +262,6 @@ int main(void) {
     printf("%10s %10s %10s %10s %10s %10s %10s %10s\n",
            "N", "candidates", "gen_time", "unique", "filter_time", "total_found", "write_time", "total_time");
     tt = clock();
-
     total_number = 1;
 
     for (int N = 3; N <= MAXN; N++) {
@@ -274,13 +270,14 @@ int main(void) {
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
         }
-
         generation_time = (double) (clock() - gt) / CLOCKS_PER_SEC;
         num_generated_in_step = igraph_vector_ptr_size(&candidates);
 
         wt = clock();
         write_to_file(&unique);
         write_time = (double) (clock() - wt) / CLOCKS_PER_SEC;
+
+        free_graphs_in_vector(&unique);
         igraph_vector_ptr_clear(&unique);
 
         ft = clock();
@@ -288,7 +285,7 @@ int main(void) {
         num_unique_found = igraph_vector_ptr_size(&unique);
         filter_time = (double) (clock() - ft) / CLOCKS_PER_SEC;
 
-        total_number += igraph_vector_ptr_size(&unique);
+        total_number += num_unique_found;
         total_time += (double) (clock() - tt) / CLOCKS_PER_SEC;
 
         printf("%10i %10li %10.4f %10li %10.4f %10li %10.4f %10.4f\n",
