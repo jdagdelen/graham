@@ -185,21 +185,21 @@ void filter_unique(igraph_vector_ptr_t *graphs,
     int n = (int) igraph_vector_ptr_size(graphs);
     int num_unique = 0;
     int aligned_array_size = ((n / 16) + 1) * 16;
+    printf("%i", aligned_array_size);
+    printf("%li", n);
     int *unique_indices = calloc(aligned_array_size, sizeof(int));
     int *removed = calloc(aligned_array_size, sizeof(int));
-#pragma omp parallel
+    #pragma omp parallel
     {
         for (int i = 0; i < igraph_vector_ptr_size(graphs) - 1; i++) {
             igraph_t *g1;
             igraph_t *g2;
             g1 = VECTOR(*graphs)[i];
-#pragma omp for private(g2) // schedule(static, 8)
+            #pragma omp for private(g2) // schedule(static, 8)
             for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
-
                 if (removed[i] != 1 && removed[j] != 1) {
                     g2 = VECTOR(*graphs)[j];
                     if (isomorphic(g1, g2)) {
-#pragma omp atomic
                         removed[j] = 1;
                     }
                 }
