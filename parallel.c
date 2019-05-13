@@ -218,31 +218,31 @@ void filter_unique(igraph_vector_ptr_t *graphs,
     };
 }
 
-void filter_unique(igraph_vector_ptr_t *clusters,
-                   igraph_vector_ptr_t *candidates,
-                   igraph_vector_ptr_t *unique
-) {
-    for (int i = 0; i < igraph_vector_ptr_size(candidates); i++) {
-        igraph_t *g1 = VECTOR(*candidates)[i];
-        if (g1 == NULL) {
-            continue;
-        }
-        if (i < igraph_vector_ptr_size(candidates) - 1) {
-            for (int j = i + 1; j < igraph_vector_ptr_size(candidates); j++) {
-                igraph_bool_t are_isomorphic;
-                igraph_t *g2 = VECTOR(*candidates)[j];
-                if (!(g1 == NULL || g2 == NULL)) {
-                    igraph_isomorphic_bliss(VECTOR(*candidates)[i], VECTOR(*candidates)[j],
-                                            &are_isomorphic, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
-                    if (are_isomorphic) {
-                        VECTOR(*candidates)[j] = NULL;
-                    }
-                }
-            }
-        }
-        igraph_vector_ptr_push_back(unique, g1);
-    }
-}
+//void filter_unique(igraph_vector_ptr_t *clusters,
+//                   igraph_vector_ptr_t *candidates,
+//                   igraph_vector_ptr_t *unique
+//) {
+//    for (int i = 0; i < igraph_vector_ptr_size(candidates); i++) {
+//        igraph_t *g1 = VECTOR(*candidates)[i];
+//        if (g1 == NULL) {
+//            continue;
+//        }
+//        if (i < igraph_vector_ptr_size(candidates) - 1) {
+//            for (int j = i + 1; j < igraph_vector_ptr_size(candidates); j++) {
+//                igraph_bool_t are_isomorphic;
+//                igraph_t *g2 = VECTOR(*candidates)[j];
+//                if (!(g1 == NULL || g2 == NULL)) {
+//                    igraph_isomorphic_bliss(VECTOR(*candidates)[i], VECTOR(*candidates)[j],
+//                                            &are_isomorphic, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
+//                    if (are_isomorphic) {
+//                        VECTOR(*candidates)[j] = NULL;
+//                    }
+//                }
+//            }
+//        }
+//        igraph_vector_ptr_push_back(unique, g1);
+//    }
+//}
 
 
 int write_graph(const igraph_t *graph, FILE *outstream) {
