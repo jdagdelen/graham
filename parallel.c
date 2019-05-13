@@ -139,7 +139,7 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
 void filter_unique(igraph_vector_ptr_t *graphs,
                    igraph_vector_ptr_t *unique) {
 
-    int n_candidates = igraph_vector_ptr_size(graphs)
+    int n_candidates = igraph_vector_ptr_size(graphs);
     igraph_vector_ptr_resize(unique, n_candidates);
     igraph_vector_ptr_clear(unique);
     igraph_vector_bool_t found;
@@ -163,7 +163,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
                 }
                 #pragma omp critical
                 {
-                    VECTOR(unique)[number_found] = g1;
+                    VECTOR(*unique)[number_found] = g1;
                     number_found++;
                 }
             }
