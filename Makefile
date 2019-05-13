@@ -11,5 +11,6 @@ parallel: parallel.o
 	$(CC)  parallel.o -o parallel $(CFLAGS) -fopenmp
 
 parallel.o: parallel.c
-	$(CC) -c parallel.c $(CFLAGS) 
+	$(CC) -c parallel.c $(CFLAGS) -fopenmp
+
 
