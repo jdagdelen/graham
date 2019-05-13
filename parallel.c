@@ -158,6 +158,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
                     }
                 }
                 if (!found[i]){
+                    #pragma omp critical
                     igraph_vector_ptr_push_back(unique, g1);
                 }
             }
