@@ -185,8 +185,6 @@ void filter_unique(igraph_vector_ptr_t *graphs,
     int n = (int) igraph_vector_ptr_size(graphs);
     int num_unique = 0;
     int aligned_array_size = ((n / 16) + 1) * 16;
-    printf("%i", aligned_array_size);
-    printf("%li", n);
     int *unique_indices = calloc(aligned_array_size, sizeof(int));
     int *removed = calloc(aligned_array_size, sizeof(int));
     #pragma omp parallel
