@@ -10,6 +10,7 @@
 #include <gsl/gsl_combination.h>
 #include <stdio.h>
 #include <time.h>
+#include <omp.h>
 
 #define max(x, y) ((x) >= (y)) ? (x) : (y)
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
