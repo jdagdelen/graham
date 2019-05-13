@@ -76,7 +76,7 @@ void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
         g1 = VECTOR(*graphs)[i];
         #pragma omp for private(g2) // schedule(static, 8)
         for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
-            if (removed + i != 1 && removed + j != 1) {
+            if (removed[i] != 1 && removed[j] != 1) {
                 g2 = VECTOR(*graphs)[j];
                 if (isomorphic(g1, g2)) {
                     removed[j] = 1;
@@ -87,11 +87,11 @@ void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
         num_unique++;
     }
     if (removed[n - 1] == 0){
-        unique_indices + num_unique = n - 1;
+        unique_indices[num_unique] = n - 1;
         num_unique++;
     }
     for (int i = 0; i < num_unique; i++) {
-        igraph_vector_ptr_push_back(&unique, VECTOR(*graphs)[i]);
+        igraph_vector_ptr_push_back(&unique, VECTOR(*graphs)[unique_indices[i]]);
     }
     igraph_vector_ptr_clear(graphs);
     igraph_vector_ptr_copy(graphs, &unique);
