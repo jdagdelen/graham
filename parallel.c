@@ -13,7 +13,7 @@
 #define true 1
 #define false 0
 
-int MAXDEGREE = 4;
+int MAXDEGREE = 6;
 int MAXN = 8;
 
 /* destroys a list of igraph_t objects */
