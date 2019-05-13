@@ -199,7 +199,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
                 if (removed[i] != 1 && removed[j] != 1) {
                     g2 = VECTOR(*graphs)[j];
                     if (isomorphic(g1, g2)) {
-                        printf("found isomorphism\n", aligned_array_size);
+                        printf("found isomorphism\n");
                         removed[j] = 1;
                     }
                 }
