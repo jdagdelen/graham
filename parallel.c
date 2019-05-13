@@ -159,14 +159,14 @@ void filter_unique(igraph_vector_ptr_t *graphs,
                 }
                 if (!found[i]){
                     #pragma omp critical
-                    igraph_vector_ptr_push_back(unique, g1);
+                        igraph_vector_ptr_push_back(unique, g1);
                 }
             }
         }
         else if (i == n_candidates - 1 && !found[i]) {
             // finally, keep the last graph
             #pragma omp critical
-            igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[i]);
+                igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[i]);
         } else{
             continue;
         }
