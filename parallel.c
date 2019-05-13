@@ -6,6 +6,7 @@
 #include <gsl/gsl_combination.h>
 #include <stdio.h>
 #include <time.h>
+#include <omp.h>
 
 #define max(x, y) ((x) >= (y)) ? (x) : (y)
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
@@ -151,7 +152,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
             if (i < igraph_vector_ptr_size(graphs) - 1) {
                 #pragma omp for
                 for (int j = i + 1; j < n_candidates; j++) {
-                    printf("got inside the loop");
+//                    printf("got inside the loop\n");
                     igraph_t *g2 = VECTOR(*graphs)[j];
                     if (!(VECTOR(found)[j])) {
                         if (isomorphic(g1, g2)) {
