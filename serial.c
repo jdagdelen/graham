@@ -11,6 +11,7 @@
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
 
 int MAXDEGREE = 4;
+int MAXN = 8;
 
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
@@ -225,7 +226,7 @@ int main(void) {
 
     total_number = 1;
 
-    for (int N = 3; N < 10; N++) {
+    for (int N = 3; N <= MAXN; N++) {
         igraph_vector_ptr_clear(&candidates);
         gt = clock();
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
