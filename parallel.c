@@ -145,10 +145,10 @@ void filter_unique(igraph_vector_ptr_t *graphs,
     igraph_vector_bool_t found;
     igraph_vector_bool_init(&found, n_candidates);
     int number_found = 0;
-    #pragma omp parallel
+    #pragma omp parallel shared(g1)
     for (int i = 0; i < n_candidates; i++) {
         // handle graphs that have already been found
-        if (!(VECTOR(found)[i]) && i < igraph_vector_ptr_size(graphs) - 1) {
+        if (!(VECTOR(found)[i]) && i < n_candidates - 1) {
             igraph_t *g1 = VECTOR(*graphs)[i];
             // handle all possible pairs of graphs
             if (i < igraph_vector_ptr_size(graphs) - 1) {
@@ -169,7 +169,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
             }
         } else if (i == n_candidates - 1 && !(VECTOR(found)[i])) {
             // finally, keep the last graph
-            igraph_vector_ptr_push_back(unique, g1);
+            igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[i]);
         } else{
             continue;
         }
