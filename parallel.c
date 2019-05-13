@@ -142,13 +142,13 @@ void filter_unique(igraph_vector_ptr_t *graphs,
     int n_candidates = igraph_vector_ptr_size(graphs);
     int* found = calloc(n_candidates, sizeof(int));
 
+    #pragma omp parallel for
     for (int i = 0; i < n_candidates; i++) {
         // handle graphs that have already been found
         if (!found[i] && i < n_candidates - 1) {
             igraph_t *g1 = VECTOR(*graphs)[i];
             // handle all possible pairs of graphs
             if (i < igraph_vector_ptr_size(graphs) - 1) {
-                #pragma omp parallel for schedule(static)
                 for (int j = i + 1; j < n_candidates; j++) {
 //                    printf("got inside the loop\n");
                     igraph_t *g2 = VECTOR(*graphs)[j];

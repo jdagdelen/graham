@@ -7,7 +7,7 @@ Serial
  7       3676     0.0050       1438     8.1039       1632     0.0573     8.4240
  8      36314     0.0516      14739   872.7583      16371     0.5048   890.0282
 
-4 threads
+4 threads static scheduling
  N candidates   gen_time     unique filter_time total_found write_time total_time
  3          3     0.0000          2     0.0041          3     0.0000     0.0041
  4         14     0.0000          6     0.0004          9     0.0000     0.0088
