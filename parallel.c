@@ -16,6 +16,7 @@
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
 
 int MAXDEGREE = 4;
+int MAXN = 5;
 
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
@@ -142,6 +143,7 @@ void filter_unique(igraph_vector_ptr_t *clusters,
                    igraph_vector_ptr_t *candidates,
                    igraph_vector_ptr_t *unique
 ) {
+    #pragma omp parallel for
     for (int i = 0; i < igraph_vector_ptr_size(candidates); i++) {
         igraph_t *g1 = VECTOR(*candidates)[i];
         if (g1 == NULL){
