@@ -142,12 +142,12 @@ void filter_unique(igraph_vector_ptr_t *graphs,
 
     int n_candidates = igraph_vector_ptr_size(graphs);
     igraph_vector_ptr_clear(unique);
-    igraph_vector_bool_t found;
-    igraph_vector_bool_init(&found, n_candidates);
+    int* found = calloc(n_candidates, sizeof(int));
+
     #pragma omp parallel
     for (int i = 0; i < n_candidates; i++) {
         // handle graphs that have already been found
-        if (!(VECTOR(found)[i]) && i < n_candidates - 1) {
+        if (!found[i] && i < n_candidates - 1) {
             igraph_t *g1 = VECTOR(*graphs)[i];
             // handle all possible pairs of graphs
             if (i < igraph_vector_ptr_size(graphs) - 1) {
@@ -155,14 +155,14 @@ void filter_unique(igraph_vector_ptr_t *graphs,
                 for (int j = i + 1; j < n_candidates; j++) {
 //                    printf("got inside the loop\n");
                     igraph_t *g2 = VECTOR(*graphs)[j];
-                    if (!(VECTOR(found)[j])) {
+                    if (!found[j]) {
                         if (isomorphic(g1, g2)) {
-                            VECTOR(found)[j] = true;
+                            found[j] = true;
                         }
                     }
                 }
                 #pragma omp barrier
-                if (!(VECTOR(found)[i])){
+                if (!found[i]){
                     igraph_vector_ptr_push_back(unique, g1);
                 }
             }
@@ -174,6 +174,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
             continue;
         }
     }
+    free(found);
 }
 
 //void filter_unique(igraph_vector_ptr_t *clusters,
