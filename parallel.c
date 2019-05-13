@@ -16,7 +16,7 @@
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
 
 int MAXDEGREE = 4;
-int MAXN = 5;
+int MAXN = 8;
 
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
@@ -154,15 +154,15 @@ void filter_unique(igraph_vector_ptr_t *clusters,
                 igraph_bool_t are_isomorphic;
                 igraph_t *g2 = VECTOR(*candidates)[j];
                 if (!(g1 == NULL || g2 == NULL)) {
-                    igraph_isomorphic_bliss(VECTOR(*candidates)[i], VECTOR(*candidates)[j],
-                                            &are_isomorphic, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
+                    igraph_isomorphic_bliss(g1, g2, &are_isomorphic, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
                     if (are_isomorphic) {
-                        VECTOR(*candidates)[j] = NULL;
+                        VECTOR(*candidates)[i] = NULL;
+                        break;
                     }
                 }
             }
         }
-        igraph_vector_ptr_push_back(unique, g1);
+        if (VECTOR(*candidates)[i] != NULL) igraph_vector_ptr_push_back(unique, g1);
     }
 }
 
