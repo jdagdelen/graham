@@ -254,37 +254,37 @@ int main(void) {
     igraph_vector_ptr_clear(&unique);
     igraph_vector_ptr_push_back(&unique, &graph);
     double total_time, generation_time, filter_time, write_time;
-    clock_t tt, gt, ft, wt;
+    double tt, gt, ft, wt;
     long num_unique_found, total_number, num_generated_in_step;
 
     printf("%10s %10s %10s %10s %10s %10s %10s %10s\n",
            "N", "candidates", "gen_time", "unique", "filter_time", "total_found", "write_time", "total_time");
-    tt = clock();
+    tt = omp_get_wtime();
     total_number = 1;
 
     for (int N = 3; N <= MAXN; N++) {
         igraph_vector_ptr_clear(&candidates);
-        gt = clock();
+        gt = omp_get_wtime();
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
         }
-        generation_time = (double) (clock() - gt) / CLOCKS_PER_SEC;
+        generation_time = omp_get_wtime() - gt;
         num_generated_in_step = igraph_vector_ptr_size(&candidates);
 
-        wt = clock();
+        wt = omp_get_wtime();
         write_to_file(&unique);
-        write_time = (double) (clock() - wt) / CLOCKS_PER_SEC;
+        write_time = omp_get_wtime() - wt;
 
         free_graphs_in_vector(&unique);
         igraph_vector_ptr_clear(&unique);
 
-        ft = clock();
+        ft = omp_get_wtime();
         filter_unique(&candidates, &unique);
         num_unique_found = igraph_vector_ptr_size(&unique);
-        filter_time = (double) (clock() - ft) / CLOCKS_PER_SEC;
+        filter_time = omp_get_wtime() - ft;
 
         total_number += num_unique_found;
-        total_time += (double) (clock() - tt) / CLOCKS_PER_SEC;
+        total_time += (omp_get_wtime() - tt);
 
         printf("%10i %10li %10.4f %10li %10.4f %10li %10.4f %10.4f\n",
                N,
