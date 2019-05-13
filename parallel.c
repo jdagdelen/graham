@@ -52,7 +52,7 @@ void print_vertices(igraph_t *graph) {
 }
 
 /* Returns true if two graphs are isomorphic, otherwise returns false */
-igraph_bool_t isomorphic(igraph_t* g1, igraph_t* g2){
+igraph_bool_t isomorphic(igraph_t *g1, igraph_t *g2) {
     igraph_bool_t iso;
     igraph_isomorphic_bliss(g1, g2, &iso, NULL, NULL, IGRAPH_BLISS_F, IGRAPH_BLISS_F, NULL, NULL);
     return iso;
@@ -65,37 +65,41 @@ void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
     igraph_vector_ptr_clear(&unique);
     int n = (int) igraph_vector_ptr_size(graphs);
     int num_unique = 0;
-    int aligned_array_size = ((n/16)+1)*16;
+    int aligned_array_size = ((n / 16) + 1) * 16;
     int *unique_indices = calloc(aligned_array_size, sizeof(int));
     int *removed = calloc(aligned_array_size, sizeof(int));
 
-    #pragma omp parallel
-    for (int i = 0; i < igraph_vector_ptr_size(graphs) - 1; i++) {
-        igraph_t *g1;
-        igraph_t *g2;
-        g1 = VECTOR(*graphs)[i];
-        #pragma omp for private(g2) // schedule(static, 8)
-        for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
-            if (removed[i] != 1 && removed[j] != 1) {
-                g2 = VECTOR(*graphs)[j];
-                if (isomorphic(g1, g2)) {
-                    removed[j] = 1;
+#pragma omp parallel
+    {
+
+
+        for (int i = 0; i < igraph_vector_ptr_size(graphs) - 1; i++) {
+            igraph_t *g1;
+            igraph_t *g2;
+            g1 = VECTOR(*graphs)[i];
+#pragma omp for private(g2) // schedule(static, 8)
+            for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
+                if (removed[i] != 1 && removed[j] != 1) {
+                    g2 = VECTOR(*graphs)[j];
+                    if (isomorphic(g1, g2)) {
+                        removed[j] = 1;
+                    }
                 }
             }
+            unique_indices[num_unique] = i;
+            num_unique++;
         }
-        unique_indices[num_unique] = i;
-        num_unique++;
-    }
-    if (removed[n - 1] == 0){
-        unique_indices[num_unique] = n - 1;
-        num_unique++;
-    }
-    for (int i = 0; i < num_unique; i++) {
-        igraph_vector_ptr_push_back(&unique, VECTOR(*graphs)[unique_indices[i]]);
-    }
-    igraph_vector_ptr_clear(graphs);
-    igraph_vector_ptr_copy(graphs, &unique);
-    igraph_vector_ptr_destroy(&unique);
+        if (removed[n - 1] == 0) {
+            unique_indices[num_unique] = n - 1;
+            num_unique++;
+        }
+        for (int i = 0; i < num_unique; i++) {
+            igraph_vector_ptr_push_back(&unique, VECTOR(*graphs)[unique_indices[i]]);
+        }
+        igraph_vector_ptr_clear(graphs);
+        igraph_vector_ptr_copy(graphs, &unique);
+        igraph_vector_ptr_destroy(&unique);
+    };
 }
 //
 ///* Removes all duplicate graphs (isomorphic) from a vector of graphs*/
@@ -129,8 +133,8 @@ void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
 //    igraph_vector_ptr_destroy(&unique);
 //}
 
-void igraph_vector_ptr_combine(igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2){
-    for (int i = 0; i < igraph_vector_ptr_size(v2); i++){
+void igraph_vector_ptr_combine(igraph_vector_ptr_t *v1, igraph_vector_ptr_t *v2) {
+    for (int i = 0; i < igraph_vector_ptr_size(v2); i++) {
         igraph_vector_ptr_push_back(v1, VECTOR(*v2)[i]);
     }
     igraph_vector_ptr_clear(v2);
@@ -180,7 +184,7 @@ void filter_unique(igraph_vector_ptr_t *clusters,
 ) {
     for (int i = 0; i < igraph_vector_ptr_size(candidates); i++) {
         igraph_t *g1 = VECTOR(*candidates)[i];
-        if (g1 == NULL){
+        if (g1 == NULL) {
             continue;
         }
         if (i < igraph_vector_ptr_size(candidates) - 1) {
@@ -215,9 +219,9 @@ int write_graph(const igraph_t *graph, FILE *outstream) {
         igraph_integer_t from, to;
         int ret;
         igraph_edge(graph, IGRAPH_EIT_GET(it), &from, &to);
-        ret=fprintf(outstream, "%li %li ",
-                    (long int) from,
-                    (long int) to);
+        ret = fprintf(outstream, "%li %li ",
+                      (long int) from,
+                      (long int) to);
         if (ret < 0) {
             IGRAPH_ERROR("Write error", IGRAPH_EFILE);
         }
@@ -237,7 +241,6 @@ void write_to_file(igraph_vector_ptr_t *graphs) {
         fclose(file);
     }
 }
-
 
 
 int main(void) {
@@ -269,26 +272,26 @@ int main(void) {
     for (int N = 3; N <= MAXN; N++) {
         igraph_vector_ptr_clear(&candidates);
         gt = clock();
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
             mutate_seed(VECTOR(unique)[i], &candidates);
         }
 
-        generation_time = (double)(clock() - gt)/CLOCKS_PER_SEC;
+        generation_time = (double) (clock() - gt) / CLOCKS_PER_SEC;
         num_generated_in_step = igraph_vector_ptr_size(&candidates);
 
-        wt=clock();
+        wt = clock();
         write_to_file(&unique);
-        write_time = (double)(clock() - wt)/CLOCKS_PER_SEC;
+        write_time = (double) (clock() - wt) / CLOCKS_PER_SEC;
         igraph_vector_ptr_clear(&unique);
 
         ft = clock();
         filter_unique(&clusters, &candidates, &unique);
         num_unique_found = igraph_vector_ptr_size(&unique);
-        filter_time = (double)(clock() - ft)/CLOCKS_PER_SEC;
+        filter_time = (double) (clock() - ft) / CLOCKS_PER_SEC;
 
         total_number += igraph_vector_ptr_size(&unique);
-        total_time += (double)(clock() - tt)/CLOCKS_PER_SEC;
+        total_time += (double) (clock() - tt) / CLOCKS_PER_SEC;
 
         printf("%10i %10li %10.4f %10li %10.4f %10li %10.4f %10.4f\n",
                N,
