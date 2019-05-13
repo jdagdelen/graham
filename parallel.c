@@ -262,7 +262,7 @@ int main(void) {
     }
 
     igraph_vector_ptr_destroy(&candidates);
-    igraph_vector_ptr_destro(&unique);
+    igraph_vector_ptr_destroy(&unique);
     igraph_destroy(&graph);
     return 0;
 }
