@@ -6,19 +6,21 @@
 #include <gsl/gsl_combination.h>
 #include <stdio.h>
 #include <time.h>
-#include <omp.h>
 
 #define max(x, y) ((x) >= (y)) ? (x) : (y)
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
+#define true 1
+#define false 0
 
-#define MAXDEGREE 4
-#define MAXN 8
+int MAXDEGREE = 4;
+int MAXN = 8;
 
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
     long int i;
     for (i = 0; i < igraph_vector_ptr_size(graphlist); i++) {
-        if (VECTOR(*graphlist)[i] != NULL) igraph_destroy(VECTOR(*graphlist)[i]);
+        igraph_destroy(VECTOR(*graphlist)[i]);
+        free(VECTOR(*graphlist)[i]);
     }
 }
 
@@ -58,80 +60,36 @@ igraph_bool_t isomorphic(igraph_t *g1, igraph_t *g2) {
     return iso;
 }
 
-
+/* Removes all duplicate graphs (isomorphic) from a vector of graphs*/
 void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
     igraph_vector_ptr_t unique;
     igraph_vector_ptr_init(&unique, 100);
     igraph_vector_ptr_clear(&unique);
-    int n = (int) igraph_vector_ptr_size(graphs);
-    int num_unique = 0;
-    int aligned_array_size = ((n / 16) + 1) * 16;
-    int *unique_indices = calloc(aligned_array_size, sizeof(int));
-    int *removed = calloc(aligned_array_size, sizeof(int));
-
-#pragma omp parallel
-    {
-
-
-        for (int i = 0; i < igraph_vector_ptr_size(graphs) - 1; i++) {
-            igraph_t *g1;
-            igraph_t *g2;
-            g1 = VECTOR(*graphs)[i];
-#pragma omp for private(g2) // schedule(static, 8)
+    for (int i = 0; i < igraph_vector_ptr_size(graphs); i++) {
+        igraph_t *g1 = VECTOR(*graphs)[i];
+        // handle graphs that have already been found
+        if (g1 == NULL) {
+            continue;
+        }
+        // handle all possible pairs of graphs
+        if (i < igraph_vector_ptr_size(graphs) - 1) {
             for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
-                if (removed[i] != 1 && removed[j] != 1) {
-                    g2 = VECTOR(*graphs)[j];
+                igraph_t *g2 = VECTOR(*graphs)[j];
+                if (!(g1 == NULL || g2 == NULL)) {
                     if (isomorphic(g1, g2)) {
-                        removed[j] = 1;
+                        igraph_destroy(VECTOR(*graphs)[j]);
+                        VECTOR(*graphs)[j] = NULL;
                     }
                 }
             }
-            unique_indices[num_unique] = i;
-            num_unique++;
         }
-        if (removed[n - 1] == 0) {
-            unique_indices[num_unique] = n - 1;
-            num_unique++;
-        }
-        for (int i = 0; i < num_unique; i++) {
-            igraph_vector_ptr_push_back(&unique, VECTOR(*graphs)[unique_indices[i]]);
-        }
-        igraph_vector_ptr_clear(graphs);
-        igraph_vector_ptr_copy(graphs, &unique);
-        igraph_vector_ptr_destroy(&unique);
-    };
+        // finally, keep the last graph
+        igraph_vector_ptr_push_back(&unique, g1);
+    }
+    igraph_vector_ptr_clear(graphs);
+    igraph_vector_ptr_copy(graphs, &unique);
+    igraph_vector_ptr_destroy(&unique);
 }
-//
-///* Removes all duplicate graphs (isomorphic) from a vector of graphs*/
-//void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
-//    igraph_vector_ptr_t unique;
-//    igraph_vector_ptr_init(&unique, 100);
-//    igraph_vector_ptr_clear(&unique);
-//    for (int i = 0; i < igraph_vector_ptr_size(graphs); i++) {
-//        igraph_t *g1 = VECTOR(*graphs)[i];
-//        // handle graphs that have already been found
-//        if (g1 == NULL) {
-//            continue;
-//        }
-//        // handle all possible pairs of graphs
-//        if (i < igraph_vector_ptr_size(graphs) - 1) {
-//            for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
-//                igraph_t *g2 = VECTOR(*graphs)[j];
-//                if (!(g1 == NULL || g2 == NULL)) {
-//                    if (isomorphic(g1, g2)) {
-//                        igraph_destroy(VECTOR(*graphs)[j]);
-//                        VECTOR(*graphs)[j] = NULL;
-//                    }
-//                }
-//            }
-//        }
-//        // finally, keep the last graph
-//        igraph_vector_ptr_push_back(&unique, g1);
-//    }
-//    igraph_vector_ptr_clear(graphs);
-//    igraph_vector_ptr_copy(graphs, &unique);
-//    igraph_vector_ptr_destroy(&unique);
-//}
 
 void igraph_vector_ptr_combine(igraph_vector_ptr_t *v1, igraph_vector_ptr_t *v2) {
     for (int i = 0; i < igraph_vector_ptr_size(v2); i++) {
@@ -143,7 +101,6 @@ void igraph_vector_ptr_combine(igraph_vector_ptr_t *v1, igraph_vector_ptr_t *v2)
 void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
     // gets all combinations of up to 6 open vertices to connect new vertex to
     // and creates a new graph for each case.
-    printf("entered m_s\n");
     gsl_combination *c;
     igraph_vector_t open_sites;
     igraph_vector_init(&open_sites, igraph_vcount(seed));
@@ -169,59 +126,53 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
                 igraph_copy(candidate, seed);
                 igraph_add_vertices(candidate, 1, 0);
                 igraph_add_edges(candidate, &edge_list, 0);
-                printf("about to push_back new candidate\n");
                 igraph_vector_ptr_push_back(candidates, candidate);
-                printf("pushed back new candidate\n");
                 new_graphs++;
             } while (gsl_combination_next(c) == GSL_SUCCESS);
             gsl_combination_free(c);
         }
     }
     igraph_vector_destroy(&open_sites);
-    printf("exited m_s\n");
 }
 
 
 void filter_unique(igraph_vector_ptr_t *graphs,
-                   igraph_vector_ptr_t *candidates,
                    igraph_vector_ptr_t *unique) {
-    printf("entered f_u\n");
+    int n_candidates = igraph_vector_ptr_size(graphs)
+    igraph_vector_ptr_resize(unique, n_candidates);
     igraph_vector_ptr_clear(unique);
-    int n = igraph_vector_ptr_size(graphs);
-    int num_unique = 0;
-    int aligned_array_size = ((n / 16) + 1) * 16;
-    int *unique_indices = calloc(aligned_array_size, sizeof(int));
-    int *removed = calloc(aligned_array_size, sizeof(int));
+    igraph_vector_bool_t found;
+    igraph_vector_bool_init(&found, n_candidates);
+    int number_found = 0;
     #pragma omp parallel
-    {
-        for (int i = 0; i < n - 1; i++) {
-            igraph_t *g1;
-            igraph_t *g2;
-            g1 = VECTOR(*graphs)[i];
-            #pragma omp for private(g2) // schedule(static, 8)
-            for (int j = i + 1; j < n; j++) {
-                if (removed[i] != 1 && removed[j] != 1) {
-                    g2 = VECTOR(*graphs)[j];
-                    if (isomorphic(g1, g2)) {
-                        printf("found isomorphism\n");
-                        removed[j] = 1;
+    for (int i = 0; i < n_candidates; i++) {
+        // handle graphs that have already been found
+        if (!(VECTOR(found)[i]) && i < igraph_vector_ptr_size(graphs) - 1) {
+            igraph_t *g1 = VECTOR(*graphs)[i];
+            // handle all possible pairs of graphs
+            if (i < igraph_vector_ptr_size(graphs) - 1) {
+                #pragma omp for
+                for (int j = i + 1; j < n_candidates; j++) {
+                    igraph_t *g2 = VECTOR(*graphs)[j];
+                    if (!(VECTOR(found)[j])) {
+                        if (isomorphic(g1, g2)) {
+                            VECTOR(found)[j] = true;
+                        }
                     }
                 }
+                #pragma omp critical
+                {
+                    VECTOR(unique)[number_found] = g1;
+                    number_found++;
+                }
             }
-            unique_indices[num_unique] = i;
-            num_unique++;
+        } else if (i == n_candidates - 1 && !(VECTOR(found)[i])) {
+            // finally, keep the last graph
+            igraph_vector_ptr_push_back(unique, g1);
+        } else{
+            continue;
         }
     }
-    if (removed[n - 1] == 0) {
-        unique_indices[num_unique] = n - 1;
-        num_unique++;
-    }
-    for (int i = 0; i < num_unique; i++) {
-        igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[unique_indices[i]]);
-    }
-    free(unique_indices);
-    free(removed);
-    printf("exited f_u\n");
 }
 
 //void filter_unique(igraph_vector_ptr_t *clusters,
@@ -230,7 +181,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
 //) {
 //    for (int i = 0; i < igraph_vector_ptr_size(candidates); i++) {
 //        igraph_t *g1 = VECTOR(*candidates)[i];
-//        if (g1 == NULL) {
+//        if (g1 == NULL){
 //            continue;
 //        }
 //        if (i < igraph_vector_ptr_size(candidates) - 1) {
@@ -249,6 +200,8 @@ void filter_unique(igraph_vector_ptr_t *graphs,
 //        igraph_vector_ptr_push_back(unique, g1);
 //    }
 //}
+
+
 
 
 int write_graph(const igraph_t *graph, FILE *outstream) {
@@ -294,16 +247,14 @@ int main(void) {
     igraph_small(&graph, 0, IGRAPH_UNDIRECTED, 0, 1, -1);
     igraph_vector_t open;
     igraph_vector_init(&open, igraph_vcount(&graph));
-    igraph_vector_ptr_t candidates, clusters, unique, seeds;
+    igraph_vector_ptr_t candidates, unique, seeds;
 
-    igraph_vector_ptr_init(&clusters, 1000);
     igraph_vector_ptr_init(&candidates, 100);
     igraph_vector_ptr_init(&unique, 100);
 
-    igraph_vector_ptr_clear(&clusters);
     igraph_vector_ptr_clear(&candidates);
     igraph_vector_ptr_clear(&unique);
-    igraph_vector_ptr_push_back(&clusters, &graph);
+    igraph_vector_ptr_push_back(&candidates, &graph);
     igraph_vector_ptr_push_back(&unique, &graph);
     double total_time, generation_time, filter_time, write_time;
     clock_t tt, gt, ft, wt;
@@ -331,7 +282,7 @@ int main(void) {
         igraph_vector_ptr_clear(&unique);
 
         ft = clock();
-        filter_unique(&clusters, &candidates, &unique);
+        filter_unique(&candidates, &unique);
         num_unique_found = igraph_vector_ptr_size(&unique);
         filter_time = (double) (clock() - ft) / CLOCKS_PER_SEC;
 
@@ -350,7 +301,9 @@ int main(void) {
     }
 
     igraph_vector_ptr_destroy(&candidates);
-    igraph_vector_ptr_destroy(&unique);
     igraph_destroy(&graph);
     return 0;
 }
+
+
+
