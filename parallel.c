@@ -11,8 +11,8 @@
 #define max(x, y) ((x) >= (y)) ? (x) : (y)
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
 
-int MAXDEGREE = 4;
-int MAXN = 8;
+#define MAXDEGREE 4
+#define MAXN 8
 
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
@@ -58,36 +58,76 @@ igraph_bool_t isomorphic(igraph_t* g1, igraph_t* g2){
     return iso;
 }
 
-/* Removes all duplicate graphs (isomorphic) from a vector of graphs*/
+
 void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
     igraph_vector_ptr_t unique;
     igraph_vector_ptr_init(&unique, 100);
     igraph_vector_ptr_clear(&unique);
-    for (int i = 0; i < igraph_vector_ptr_size(graphs); i++) {
-        igraph_t *g1 = VECTOR(*graphs)[i];
-        // handle graphs that have already been found
-        if (g1 == NULL) {
-            continue;
-        }
-        // handle all possible pairs of graphs
-        if (i < igraph_vector_ptr_size(graphs) - 1) {
-            for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
-                igraph_t *g2 = VECTOR(*graphs)[j];
-                if (!(g1 == NULL || g2 == NULL)) {
-                    if (isomorphic(g1, g2)) {
-                        igraph_destroy(VECTOR(*graphs)[j]);
-                        VECTOR(*graphs)[j] = NULL;
-                    }
+    int n = (int) igraph_vector_ptr_size(graphs);
+    int num_unique = 0;
+    int aligned_array_size = ((n/16)+1)*16;
+    int *unique_indices = calloc(aligned_array_size, sizeof(int));
+    int *removed = calloc(aligned_array_size, sizeof(int));
+
+    #pragma omp parallel
+    for (int i = 0; i < igraph_vector_ptr_size(graphs) - 1; i++) {
+        igraph_t *g1;
+        igraph_t *g2;
+        g1 = VECTOR(*graphs)[i];
+        #pragma omp for private(g2) // schedule(static, 8)
+        for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
+            if (removed + i != 1 && removed + j != 1) {
+                g2 = VECTOR(*graphs)[j];
+                if (isomorphic(g1, g2)) {
+                    removed[j] = 1;
                 }
             }
         }
-        // finally, keep the last graph
-        igraph_vector_ptr_push_back(&unique, g1);
+        unique_indices[num_unique] = i;
+        num_unique++;
+    }
+    if (removed[n - 1] == 0){
+        unique_indices + num_unique = n - 1;
+        num_unique++;
+    }
+    for (int i = 0; i < num_unique; i++) {
+        igraph_vector_ptr_push_back(&unique, VECTOR(*graphs)[i]);
     }
     igraph_vector_ptr_clear(graphs);
     igraph_vector_ptr_copy(graphs, &unique);
     igraph_vector_ptr_destroy(&unique);
 }
+//
+///* Removes all duplicate graphs (isomorphic) from a vector of graphs*/
+//void reduce_isomorphic(igraph_vector_ptr_t *graphs) {
+//    igraph_vector_ptr_t unique;
+//    igraph_vector_ptr_init(&unique, 100);
+//    igraph_vector_ptr_clear(&unique);
+//    for (int i = 0; i < igraph_vector_ptr_size(graphs); i++) {
+//        igraph_t *g1 = VECTOR(*graphs)[i];
+//        // handle graphs that have already been found
+//        if (g1 == NULL) {
+//            continue;
+//        }
+//        // handle all possible pairs of graphs
+//        if (i < igraph_vector_ptr_size(graphs) - 1) {
+//            for (int j = i + 1; j < igraph_vector_ptr_size(graphs); j++) {
+//                igraph_t *g2 = VECTOR(*graphs)[j];
+//                if (!(g1 == NULL || g2 == NULL)) {
+//                    if (isomorphic(g1, g2)) {
+//                        igraph_destroy(VECTOR(*graphs)[j]);
+//                        VECTOR(*graphs)[j] = NULL;
+//                    }
+//                }
+//            }
+//        }
+//        // finally, keep the last graph
+//        igraph_vector_ptr_push_back(&unique, g1);
+//    }
+//    igraph_vector_ptr_clear(graphs);
+//    igraph_vector_ptr_copy(graphs, &unique);
+//    igraph_vector_ptr_destroy(&unique);
+//}
 
 void igraph_vector_ptr_combine(igraph_vector_ptr_t* v1, igraph_vector_ptr_t* v2){
     for (int i = 0; i < igraph_vector_ptr_size(v2); i++){
