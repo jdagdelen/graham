@@ -16,7 +16,7 @@
 #define min(x, y) ((x) <= (y)) ? (x) : (y)
 
 int MAXDEGREE = 4;
-int MAXN = 5;
+int MAXN = 8;
 
 /* destroys a list of igraph_t objects */
 void free_graphs_in_vector(igraph_vector_ptr_t *graphlist) {
