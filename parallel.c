@@ -169,7 +169,9 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
                 igraph_copy(candidate, seed);
                 igraph_add_vertices(candidate, 1, 0);
                 igraph_add_edges(candidate, &edge_list, 0);
+                printf("about to push_back new candidate\n");
                 igraph_vector_ptr_push_back(candidates, candidate);
+                printf("pushed back new candidate\n");
                 new_graphs++;
             } while (gsl_combination_next(c) == GSL_SUCCESS);
             gsl_combination_free(c);
