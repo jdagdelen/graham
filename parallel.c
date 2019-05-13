@@ -232,7 +232,7 @@ int main(void) {
 
     total_number = 1;
 
-    for (int N = 3; N < 10; N++) {
+    for (int N = 3; N <= MAXN; N++) {
         igraph_vector_ptr_clear(&candidates);
         gt = clock();
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
