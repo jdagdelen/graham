@@ -147,7 +147,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
             igraph_t *g1 = VECTOR(*graphs)[i];
             // handle all possible pairs of graphs
             if (i < igraph_vector_ptr_size(graphs) - 1) {
-                #pragma omp parallel for
+                #pragma omp parallel for schedule(static)
                 for (int j = i + 1; j < n_candidates; j++) {
 //                    printf("got inside the loop\n");
                     igraph_t *g2 = VECTOR(*graphs)[j];
@@ -167,6 +167,11 @@ void filter_unique(igraph_vector_ptr_t *graphs,
             igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[i]);
         } else{
             continue;
+        }
+    }
+    for (int i = 0; i < n_candidates; i++){
+        if (found[i]){
+            igraph_destroy(VECTOR(*graphs)[i]);
         }
     }
     free(found);
@@ -262,6 +267,7 @@ int main(void) {
     total_number = 1;
 
     for (int N = 3; N <= MAXN; N++) {
+
         igraph_vector_ptr_clear(&candidates);
         gt = omp_get_wtime();
         for (int i = 0; i < igraph_vector_ptr_size(&unique); i++) {
