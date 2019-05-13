@@ -277,7 +277,8 @@ int main(void) {
         num_generated_in_step = igraph_vector_ptr_size(&candidates);
 
         wt = omp_get_wtime();
-        write_to_file(&unique);
+//        write_to_file(&unique);
+        free_graphs_in_vector(&unique);
         write_time = omp_get_wtime() - wt;
 
         free_graphs_in_vector(&unique);
