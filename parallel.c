@@ -181,6 +181,7 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
 void filter_unique(igraph_vector_ptr_t *graphs,
                    igraph_vector_ptr_t *candidates,
                    igraph_vector_ptr_t *unique) {
+    printf("entered f_u\n");
     igraph_vector_ptr_clear(unique);
     int n = igraph_vector_ptr_size(graphs);
     int num_unique = 0;
