@@ -166,6 +166,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
         }
         else if (i == n_candidates - 1 && !found[i]) {
             // finally, keep the last graph
+            #pragma omp critical
             igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[i]);
         } else{
             continue;
