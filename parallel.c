@@ -148,7 +148,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
             igraph_t *g1 = VECTOR(*graphs)[i];
             // handle all possible pairs of graphs
             if (i < igraph_vector_ptr_size(graphs) - 1) {
-                #pragma omp parallel for schedule(dynamic)
+                #pragma omp parallel for schedule(dynamic, 4)
                 for (int j = i + 1; j < n_candidates; j++) {
 //                    printf("got inside the loop\n");
                     igraph_t *g2 = VECTOR(*graphs)[j];
