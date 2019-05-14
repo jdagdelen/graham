@@ -139,11 +139,11 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
 void filter_unique(igraph_vector_ptr_t *graphs,
                    igraph_vector_ptr_t *unique) {
     int n_candidates = igraph_vector_ptr_size(graphs);
-    int* found = calloc(n_candidates, sizeof(int)*16); // separating each one on separate cache line
+    int* found = calloc(n_candidates*16, sizeof(int)); // separating each one on separate cache line
 
     for (int i = 0; i < n_candidates; i++) {
         // handle graphs that have already been found
-        if (!found[i] && i < n_candidates - 1) {
+        if (!found[i*16] && i < n_candidates - 1) {
             igraph_t *g1 = VECTOR(*graphs)[i];
             // handle all possible pairs of graphs
             if (i < igraph_vector_ptr_size(graphs) - 1) {
@@ -151,18 +151,18 @@ void filter_unique(igraph_vector_ptr_t *graphs,
                 for (int j = i + 1; j < n_candidates; j++) {
 //                    printf("got inside the loop\n");
                     igraph_t *g2 = VECTOR(*graphs)[j];
-                    if (!found[j]) {
+                    if (!found[j*16]) {
                         if (isomorphic(g1, g2)) {
-                            found[j] = true;
+                            found[j*16] = true;
                         }
                     }
                 }
-                if (!found[i]){
+                if (!found[i*16]){
                     igraph_vector_ptr_push_back(unique, g1);
                 }
             }
         }
-        else if (i == n_candidates - 1 && !found[i]) {
+        else if (i == n_candidates - 1 && !found[i*16]) {
             // finally, keep the last graph
             igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[i]);
         } else{
@@ -170,7 +170,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
         }
     }
     for (int i = 0; i < n_candidates; i++){
-        if (found[i]){
+        if (found[i*16]){
             igraph_destroy(VECTOR(*graphs)[i]);
         }
     }
