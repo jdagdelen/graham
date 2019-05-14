@@ -13,7 +13,7 @@
 #define true 1
 #define false 0
 
-int MAXDEGREE = 4;
+int MAXDEGREE = 6;
 int MAXN = 8;
 
 /* destroys a list of igraph_t objects */
@@ -140,30 +140,30 @@ void filter_unique(igraph_vector_ptr_t *graphs,
                    igraph_vector_ptr_t *unique) {
 
     int n_candidates = igraph_vector_ptr_size(graphs);
-    int* found = calloc(n_candidates*16, sizeof(int)); // separating each one on separate cache line
+    int* found = calloc(n_candidates, sizeof(int));
 
     for (int i = 0; i < n_candidates; i++) {
         // handle graphs that have already been found
-        if (!found[i*16] && i < n_candidates - 1) {
+        if (!found[i] && i < n_candidates - 1) {
             igraph_t *g1 = VECTOR(*graphs)[i];
             // handle all possible pairs of graphs
             if (i < igraph_vector_ptr_size(graphs) - 1) {
-                #pragma omp parallel for
+                #pragma omp parallel for schedule(dynamic)
                 for (int j = i + 1; j < n_candidates; j++) {
 //                    printf("got inside the loop\n");
                     igraph_t *g2 = VECTOR(*graphs)[j];
-                    if (!found[j*16]) {
+                    if (!found[j]) {
                         if (isomorphic(g1, g2)) {
-                            found[j*16] = true;
+                            found[j] = true;
                         }
                     }
                 }
-                if (!found[i*16]){
+                if (!found[i]){
                     igraph_vector_ptr_push_back(unique, g1);
                 }
             }
         }
-        else if (i == n_candidates - 1 && !found[i*16]) {
+        else if (i == n_candidates - 1 && !found[i]) {
             // finally, keep the last graph
             igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[i]);
         } else{
@@ -171,7 +171,7 @@ void filter_unique(igraph_vector_ptr_t *graphs,
         }
     }
     for (int i = 0; i < n_candidates; i++){
-        if (found[i*16]){
+        if (found[i]){
             igraph_destroy(VECTOR(*graphs)[i]);
         }
     }
