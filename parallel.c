@@ -139,15 +139,15 @@ void mutate_seed(igraph_t *seed, igraph_vector_ptr_t *candidates) {
 void filter_unique(igraph_vector_ptr_t *graphs,
                    igraph_vector_ptr_t *unique) {
     int n_candidates = igraph_vector_ptr_size(graphs);
-    int* found = calloc(n_candidates, sizeof(int));
+    int* found = calloc(n_candidates, sizeof(int)*16); // separating each one on separate cache line
 
-    #pragma omp parallel for
     for (int i = 0; i < n_candidates; i++) {
         // handle graphs that have already been found
         if (!found[i] && i < n_candidates - 1) {
             igraph_t *g1 = VECTOR(*graphs)[i];
             // handle all possible pairs of graphs
             if (i < igraph_vector_ptr_size(graphs) - 1) {
+                #pragma omp parallel for
                 for (int j = i + 1; j < n_candidates; j++) {
 //                    printf("got inside the loop\n");
                     igraph_t *g2 = VECTOR(*graphs)[j];
@@ -158,15 +158,13 @@ void filter_unique(igraph_vector_ptr_t *graphs,
                     }
                 }
                 if (!found[i]){
-                    #pragma omp critical
-                        igraph_vector_ptr_push_back(unique, g1);
+                    igraph_vector_ptr_push_back(unique, g1);
                 }
             }
         }
         else if (i == n_candidates - 1 && !found[i]) {
             // finally, keep the last graph
-            #pragma omp critical
-                igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[i]);
+            igraph_vector_ptr_push_back(unique, VECTOR(*graphs)[i]);
         } else{
             continue;
         }
